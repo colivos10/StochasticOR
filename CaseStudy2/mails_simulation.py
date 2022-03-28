@@ -1,6 +1,10 @@
+# %%
 import numpy as np
 import matplotlib.pyplot as plt
-
+from sympy import *
+from sympy.abc import t
+from sympy.plotting import plot
+# %%
 z_normals = []
 x_log = []
 
@@ -31,6 +35,28 @@ plt.ylabel(r'$\lambda (t)$')
 plt.plot([i for i in range(24)], lambda_t)
 plt.show()
 
+#%%  Piece wise function
+t = np.linspace(0, 24, 100)
+steps_piece_wise_function = [((t >= 0) & (t <= 5)), ((t > 5) & (t <= 6)), ((t > 6) & (t <= 7)), ((t > 7) & (t <= 9)),
+                             ((t > 9) & (t <= 10)), ((t > 10) & (t <= 11)), ((t > 11) & (t <= 12)),
+                             ((t > 12) & (t <= 14)), ((t > 14) & (t <= 17)), ((t > 17) & (t <= 20)),
+                             ((t > 20) & (t <= 24))]
+
+return_lambda_function = [lambda t: 1, lambda t: t - 4, lambda t: 3*t - 16, lambda t: 5,
+                          lambda t: -2*t + 23, lambda t: 5*t - 47, lambda t: 2*t - 14, lambda t: 10,
+                          lambda t: -2*t + 38, lambda t: -t + 21, lambda t: 1]
+
+plt.scatter(np.linspace(0, 24, 100), np.piecewise(t, steps_piece_wise_function, return_lambda_function))
+plt.plot(np.linspace(0, 24, 100), np.piecewise(t, steps_piece_wise_function, return_lambda_function))
+plt.show()
+# %%
+formula = Piecewise((1, ((t >= 0) & (t <= 5))), (t - 4, ((t > 5) & (t <= 6))), (3*t - 16, ((t > 6) & (t <= 7))),
+                    (5, ((t > 7) & (t <= 9))), (-2*t + 23, ((t > 9) & (t <= 10))), (5*t - 47, ((t > 10) & (t <= 11))),
+                    (2*t - 14, ((t > 11) & (t <= 12))), (10, ((t > 12) & (t <= 14))), (-2*t + 38, ((t > 14) & (t <= 17))),
+                    (-t + 21, ((t > 17) & (t <= 20))), (1, ((t > 20) & (t <= 24))))
+
+
+# %%
 # non homogenous poisson process
 lambda_star = np.max(lambda_t)
 
@@ -42,3 +68,4 @@ time_arrival_variate = - np.log(1 - uniform_variate) / lambda_star # x_n
 t = t + time_arrival_variate # t = t + x_n
 
 uniform_variate_hat = np.random.uniform() # Uniform(0,1)
+
