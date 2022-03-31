@@ -55,6 +55,19 @@ print(f'The mean of the number of arrivals for one day is: {np.mean(number_arriv
 print(f'The variance of the number of arrivals for one day is: {np.var(number_arrivals_sim)}')
 
 # %% Number 5
-
-arrivals_and_emails = Parallel(n_jobs=8)(
+np.random.seed(32922)
+arrivals_and_emails = Parallel(n_jobs=7)(
     delayed(cs2.non_homogenous_compound_pp)(i, formula, lambda_star) for i in range(10000))
+
+# %% Saving file
+import json
+
+# save as json
+with open('data.json', 'w') as f:
+    json.dump(arrivals_and_emails,f)
+
+# %%
+
+# read the file
+with open('data.json') as f:
+   lst1 = [tuple(x) for x in json.load(f)]
