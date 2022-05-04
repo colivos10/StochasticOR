@@ -4,11 +4,13 @@ import numpy as np
 from joblib import Parallel, delayed
 from sympy import Piecewise
 from sympy.abc import t
+import json
+import pandas as pd
 
 from CaseStudy2 import cs2_scripts as cs2
 
 # %% Number 2
-
+np.random.seed(100395)
 size_emails = Parallel(n_jobs=8)(delayed(cs2.log_normal_variates)(4, 1, i) for i in range(10000))
 print(f'The mean of the size of the emails is: {np.mean(size_emails)}')
 print(f'The variance of the size of the emails is: {np.var(size_emails)}')
@@ -35,16 +37,17 @@ plt.xticks([i for i in range(0, 25)])
 plt.yticks([i for i in range(0, 11)])
 plt.xlabel('t')
 plt.ylabel(r'$\lambda (t)$')
+plt.savefig('lambda_t.pdf')
 plt.show()
 
 # %% Number 4
 
-formula = Piecewise((1, ((t >= 0) & (t <= 5))), (t - 4, ((t > 5) & (t <= 6))), (3 * t - 16, ((t > 6) & (t <= 7))),
-                    (5, ((t > 7) & (t <= 9))), (-2 * t + 23, ((t > 9) & (t <= 10))),
-                    (5 * t - 47, ((t > 10) & (t <= 11))),
-                    (2 * t - 14, ((t > 11) & (t <= 12))), (10, ((t > 12) & (t <= 14))),
-                    (-2 * t + 38, ((t > 14) & (t <= 17))),
-                    (-t + 21, ((t > 17) & (t <= 20))), (1, ((t > 20) & (t <= 24))))
+formula = Piecewise((1, ((t >= 0) & (t < 5))), (t - 4, ((t >= 5) & (t < 6))), (3 * t - 16, ((t >= 6) & (t < 7))),
+                    (5, ((t >= 7) & (t < 9))), (-2 * t + 23, ((t >= 9) & (t < 10))),
+                    (5 * t - 47, ((t >= 10) & (t < 11))),
+                    (2 * t - 14, ((t >= 11) & (t < 12))), (10, ((t >= 12) & (t < 14))),
+                    (-2 * t + 38, ((t >= 14) & (t < 17))),
+                    (-t + 21, ((t >= 17) & (t < 20))), (1, ((t >= 20) & (t <= 24))))
 lambda_star = np.max(lambda_t)
 np.random.seed(32822)
 
@@ -56,11 +59,13 @@ print(f'The variance of the number of arrivals for one day is: {np.var(number_ar
 
 # %% Number 5
 np.random.seed(32922)
+mu = 4
+sigma = 1
+
 arrivals_and_emails = Parallel(n_jobs=7)(
-    delayed(cs2.non_homogenous_compound_pp)(i, formula, lambda_star) for i in range(10000))
+    delayed(cs2.non_homogenous_compound_pp)(i, formula, lambda_star) for i in range(100))
 
 # %% Saving file
-import json
 
 # save as json
 with open('data.json', 'w') as f:
@@ -71,3 +76,34 @@ with open('data.json', 'w') as f:
 # read the file
 with open('data.json') as f:
    lst1 = [tuple(x) for x in json.load(f)]
+
+# %% 6.a and 6.b
+
+email_size_total_per_day = [sum(lst1[i][1]) for i in range(len(lst1))]
+email_size_sample_mean = np.mean(email_size_total_per_day)
+email_size_sample_variance = np.var(email_size_total_per_day)
+
+# %% data frame of total size
+df = pd.DataFrame(email_size_total_per_day)
+
+# %%
+
+pbb_greater_10mb = len(df[df[0] > 10000]) / len(df)
+pbb_less_6mb = len(df[df[0] < 6000]) / len(df)
+
+# %% percentiles
+
+percentiles = [0.1, 0.25, 0.5, 0.75, 0.9]
+values_percentiles = [df.quantile(i)[0] for i in percentiles]
+
+# %% Pbb before noon
+
+pbb_before_noon = sum([sum(np.array(lst1[i][0]) >= 12) < sum(np.array(lst1[i][0]) < 12) for i in range(len(lst1))]) / 10000
+
+# %% Pbb
+
+intervals_simulation = [[sum((np.array(lst1[j][0]) < i+1) & (np.array(lst1[j][0]) >= i)) for i in range(0, 24)]
+             for j in range(len(lst1))]
+
+# %%
+pbb_busy_12_1 = sum(intervals_simulation[i][12] == np.max(intervals_simulation[i]) for i in range(len(lst1))) / len(lst1)

@@ -45,8 +45,8 @@ def non_homogenous_compound_pp(replicates, formula, lambda_star):
     uniform_variate = np.random.uniform()  # Uniform(0,1)
     time_arrival_variate = - np.log(1 - uniform_variate) / lambda_star  # x_n
     time = time + time_arrival_variate  # t = t + x_n
+    N = 0
     while time <= 24:
-        N = 0
 
         uniform_variate_hat = np.random.uniform()  # Uhat Uniform(0,1)
         lambda_t_return = formula.subs(t, time)
